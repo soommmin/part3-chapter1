@@ -4,10 +4,14 @@ import android.Manifest
 import android.app.Activity
 import android.content.Context
 import android.content.pm.PackageManager
+import android.part1.face_recognition.recognition.FaceAnalyzer
+import android.part1.face_recognition.recognition.FaceAnalyzerListener
 import android.util.Log
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.activity.ComponentActivity
 import androidx.camera.core.CameraSelector
+import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
@@ -37,16 +41,16 @@ class Camera(private val context: Context) : ActivityCompat.OnRequestPermissions
     private lateinit var previewView: PreviewView
 
     private var cameraExecutor = Executors.newSingleThreadExecutor()
-
+    private var listener: FaceAnalyzerListener? = null
 
     //mainActivity에서 받아와서 프리뷰 연결(frameLayout이 파라미터로 들어옴)
 
-    fun initCamera(layout: ViewGroup) {
-
+    fun initCamera(layout: ViewGroup, listener: FaceAnalyzerListener) {
+        val context = layout.context
+        this.listener = listener
         previewView = PreviewView(context)
         layout.addView(previewView)
         permissionCheck(context)
-
     }
 
     private fun permissionCheck(context: Context) {
@@ -82,6 +86,42 @@ class Camera(private val context: Context) : ActivityCompat.OnRequestPermissions
             Log.e("Camera", "binding failed", e)
         }
     }
+
+
+
+    //mainActivity에서 실행을 해서 얼굴 인식을 실행시키도록
+    fun startFaceDetect() {
+        val cameraProvider = cameraProviderFuture.get()
+        val faceAnalyzer = FaceAnalyzer((context as ComponentActivity).lifecycle, previewView, listener)
+        val analysisUseCase = ImageAnalysis.Builder()
+            .build()
+            .also {
+                it.setAnalyzer(
+                    cameraExecutor,
+                    faceAnalyzer
+                )
+            }
+
+        try {
+            cameraProvider.bindToLifecycle(
+                context as LifecycleOwner,
+                cameraSelector,
+                preview,
+                analysisUseCase,
+            )
+        } catch (e: Exception) {
+            Log.e("Camera", "binding failed", e)
+        }
+    }
+    fun stopFaceDetect() {
+        try {
+            cameraProviderFuture.get().unbindAll()
+            previewView.releasePointerCapture()
+        } catch (e: Exception) {
+            Log.e("Camera", "binding failed", e)
+        }
+    }
+
 
     override fun onRequestPermissionsResult(
         requestCode: Int,
