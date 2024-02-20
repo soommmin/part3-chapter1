@@ -27,7 +27,7 @@ class MainActivity : AppCompatActivity(), FaceAnalyzerListener {
 
         binding.startDetectButton.setOnClickListener {
             it.isVisible = false
-           // binding.overlayView.reset()
+            binding.overlayView.reset()
             camera.startFaceDetect()
             setProgressText("얼굴을 보여주세요")
         }
@@ -42,16 +42,16 @@ class MainActivity : AppCompatActivity(), FaceAnalyzerListener {
     }
 
     override fun notDetect() {
-       // binding.overlayView.reset()
+        binding.overlayView.reset()
     }
 
     override fun detectProgress(progress: Float, message: String) {
         setProgressText(message)
-       // binding.overlayView.setProgress(progress)
+        binding.overlayView.setProgress(progress)
     }
 
     override fun faceSize(rectF: RectF, sizeF: SizeF, pointF: PointF) {
-       // binding.overlayView.setSize(rectF, sizeF, pointF)
+        binding.overlayView.setSize(rectF, sizeF, pointF)
     }
 
     override fun onRequestPermissionsResult(
